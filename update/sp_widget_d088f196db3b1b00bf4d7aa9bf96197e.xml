@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>custom</category>
+        <client_script><![CDATA[function($scope, spUtil) {
+  /* widget controller */
+  var c = this;
+
+	/* doesn't work, maybe because the ritm is actually edited - not in this scope
+  spUtil.recordWatch($scope, "sc_req_item", "cat_item=0672c007db240f00bf4d7aa9bf96192e", function(name, data){
+		console.log('callback name: '+name);
+		console.log('callback data: '+data);
+	});*/
+
+	
+$('#ritmTable').on('click', 'tbody tr', function(event) {
+  $(this).addClass('warning').siblings().removeClass('warning');
+	//debugger;
+});
+	
+$('#locationTable').on('click', 'tbody tr', function(event) {
+  $(this).addClass('warning').siblings().removeClass('warning');
+});
+	
+	
+	$scope.loadInventory = function(ritm){
+		//console.log('i got ritm: ' + ritm.sysID);
+		$scope.data.selectedRITM = ritm;
+		$scope.data.operation = "getInventory";
+		spUtil.update($scope).then(function(response) {
+			//console.log('selected ritm table data: ' + $scope.data.selected_ritm_td);
+		});
+		console.log('ritm: ' + $scope.data.selectedRITM );
+	}
+	
+	$scope.searchByName = function(){
+		if($scope.data.selectedRITM == null){
+			alert('You must select a Requested Item from top table first.');
+			return;
+		}else{
+			$scope.data.operation = "searchByName";
+			$scope.data.locationName = $scope.data.inventories[0].locationName;
+			spUtil.update($scope).then(function(response) {
+				//
+			});
+		}
+	}
+	$scope.searchByAddress = function(){
+		if($scope.data.selectedRITM == null){
+			alert('You must select a Requested Item from top table first.');
+			return;
+		}else{
+			$scope.data.operation = "searchByAddress";
+			spUtil.update($scope).then(function(response) {
+				//
+			});
+		}
+	}
+	$scope.searchByZip = function(){
+		if($scope.data.selectedRITM == null){
+			alert('You must select a Requested Item from top table first.');
+			return;
+		}else{
+			$scope.data.operation = "searchByZip";
+			spUtil.update($scope).then(function(response) {
+				//
+			});
+		}
+	}
+	$scope.searchByCity = function(){
+		if($scope.data.selectedRITM == null){
+			alert('You must select a Requested Item from top table first.');
+			return;
+		}else{
+			$scope.data.operation = "searchByCity";
+			spUtil.update($scope).then(function(response) {
+				//
+			});
+		}
+	}
+	
+	$scope.selectLocation = function(location){
+		$scope.data.selectedLocation = location;
+	}
+	
+	$scope.linkLocation = function(){
+		// has selected RITM and Location records?
+		if($scope.data.selectedRITM == null || $scope.data.selectedLocation == null){
+			alert('you need to first select a Requested Item and a Matching Location.');
+			console.log('ritm: ' + $scope.data.selectedRITM + ' loc: ' + $scope.data.selectedLocation );
+			return;
+		}
+
+		$scope.data.operation = "setLocationForRITM";
+		spUtil.update($scope).then(function(response) {
+			resetData();
+		});
+	}
+	
+		$scope.skipRITM = function(){
+		// has selected RITM and Location records?
+		if($scope.data.selectedRITM == null ){
+			alert('you need to first select a Requested Item.');
+			return;
+		}
+
+		$scope.data.operation = "skipRITM";
+		spUtil.update($scope).then(function(response) {
+			resetData();
+		});
+	}
+	
+		function resetData(){
+			$scope.data.selectedRITM = null;
+			$scope.data.selectedLocation = null;
+			$scope.data.operation = null;
+			$scope.data.inventories = [];
+			$scope.data.locations = [];
+			//$scope.data=null;
+			$scope.data.operation = "getRequestedItems";
+			$scope.server.update();
+		}
+	
+	
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css/>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id>matchinventorylocation17</id>
+        <internal>false</internal>
+        <link/>
+        <name>MatchInventoryLocation17</name>
+        <option_schema/>
+        <public>false</public>
+        <roles/>
+        <script><![CDATA[(function() {
+	/* populate the 'data' object */
+	/* e.g., data.table = $sp.getValue('table'); */
+	var items = [];
+
+	//console.log('input is: ' + input);
+	if(input == null){// does this EVER get hit?
+		data.selectedRITM = null;
+		data.selectedLocation = null;
+	}
+
+	if(input == undefined){
+		getRequestedItems();
+	}
+
+	function getRequestedItems(){
+		var agr = new GlideRecord("sc_req_item");
+		// would have liked inventory, does not have location set, but settled on
+		// last updated 3 months ago
+		agr.addEncodedQuery('cat_item=0672c007db240f00bf4d7aa9bf96192e^variables.4d368487db240f00bf4d7aa9bf96198f=storage_location^sys_updated_on<javascript:gs.beginningOfLast3Months()');
+		//agr.orderByDesc("sys_updated_on");// order by address in table
+		agr.setLimit(10);
+		agr.query();
+		//console.log('total left: ' + agr.getRowCount());
+		while(agr.next()){
+			var item = {};
+			item.all = "";
+			item.sysID = agr.getValue('sys_id');
+			item.name = agr.getDisplayValue('number');
+
+			var variables = $sp.getRecordVariablesArray(agr);
+
+			for(var x=0; x<variables.length; x++){
+				if(variables[x].label == "Storage Address"){
+					item.address = variables[x].display_value;
+				}
+				else if(variables[x].label == "Storage City"){
+					item.city = variables[x].display_value;
+				}
+				else if(variables[x].label == "Storage State"){
+					item.state = variables[x].display_value;
+				}
+				else if(variables[x].label == "Storage Zip Code"){
+					item.zip = variables[x].display_value;
+				}
+				else if(variables[x].label == "Location Name"){
+					item.loc = variables[x].display_value;
+				}
+				//item.all += variables[x].label + " ";
+			}
+			items.push(item);
+		}
+		data.items = items;
+}
+
+	if(input){
+		if(input.operation == "getRequestedItems"){
+			getRequestedItems();
+		}
+
+		else if(input.operation == "getInventory"){
+			//console.log('well at least i got into getInventory');
+			var igr = new GlideRecord('u_inventory');
+			igr.addQuery('u_street_address', input.selectedRITM.address);
+			igr.query();
+			var inventories = [];
+			while(igr.next()){
+				var inventory = {};
+				inventory.address = igr.getDisplayValue('u_street_address');
+				inventory.locationName = igr.getDisplayValue('u_location_name');
+				inventory.zip = igr.getDisplayValue('u_zip_code');
+				inventory.city = igr.getDisplayValue('u_city');
+				inventory.state = igr.getDisplayValue('u_state');
+				inventories.push(inventory);
+			}
+			data.inventories = inventories;
+			data.locations = [];
+		}
+		else if(input.operation == "searchByName"){
+			console.log('the inventory location name is: ' + input.locationName);
+			var ttsl = new GlideRecord('u_truck_trailer_uid');
+			ttsl.addQuery('u_uniqueid', input.locationName);
+			//ttsl.addQuery('u_locationtype', 'Storage Location');
+			ttsl.query();
+			console.log('searchByName returned: ' + ttsl.getRowCount() + " records.");
+			var locations = [];
+			while(ttsl.next()){
+				var sLocation = {};
+				sLocation.address = ttsl.getDisplayValue('u_storage_address');
+				sLocation.locationName = ttsl.getDisplayValue('u_uniqueid');
+				sLocation.zip = ttsl.getDisplayValue('u_storage_zipcode');
+				sLocation.city = ttsl.getDisplayValue('u_storage_city');
+				sLocation.state = ttsl.getDisplayValue('u_storage_state');
+				sLocation.sysID = ttsl.getValue('sys_id');
+				locations.push(sLocation);
+			}
+			data.locations = locations;
+		}
+		else if(input.operation == "searchByAddress"){
+			var ttsl = new GlideRecord('u_truck_trailer_uid');
+			ttsl.addQuery('u_storage_address', input.selectedRITM.address);
+			console.log('input.selectedRITM.address: ' + input.selectedRITM.address);
+			//ttsl.addQuery('u_uniqueid', input.selectedRITM.nameOnlyOnInspection);
+			//ttsl.addQuery('u_locationtype', 'Storage Location');
+			ttsl.query();
+			console.log('searchByAddress returned: ' + ttsl.getRowCount() + " records.");
+			var locations = [];
+			while(ttsl.next()){
+				var sLocation = {};
+				sLocation.address = ttsl.getDisplayValue('u_storage_address');
+				sLocation.locationName = ttsl.getDisplayValue('u_uniqueid');
+				sLocation.zip = ttsl.getDisplayValue('u_storage_zipcode');
+				sLocation.city = ttsl.getDisplayValue('u_storage_city');
+				sLocation.state = ttsl.getDisplayValue('u_storage_state');
+				sLocation.sysID = ttsl.getValue('sys_id');
+				locations.push(sLocation);
+			}
+			data.locations = locations;
+		}
+		else if(input.operation == "searchByZip"){
+			var ttsl = new GlideRecord('u_truck_trailer_uid');
+			ttsl.addQuery('u_storage_zipcode', input.selectedRITM.zip);
+			ttsl.query();
+			console.log('searchByZip returned: ' + ttsl.getRowCount() + " records.");
+			var locations = [];
+			while(ttsl.next()){
+				var sLocation = {};
+				sLocation.address = ttsl.getDisplayValue('u_storage_address');
+				sLocation.locationName = ttsl.getDisplayValue('u_uniqueid');
+				sLocation.zip = ttsl.getDisplayValue('u_storage_zipcode');
+				sLocation.city = ttsl.getDisplayValue('u_storage_city');
+				sLocation.state = ttsl.getDisplayValue('u_storage_state');
+				sLocation.sysID = ttsl.getValue('sys_id');
+				locations.push(sLocation);
+			}
+			data.locations = locations;
+		}
+		else if(input.operation == "searchByCity"){
+			var ttsl = new GlideRecord('u_truck_trailer_uid');
+			ttsl.addQuery('u_storage_city', input.selectedRITM.city);
+			ttsl.query();
+			console.log('searchByCity returned: ' + ttsl.getRowCount() + " records.");
+			var locations = [];
+			while(ttsl.next()){
+				var sLocation = {};
+				sLocation.address = ttsl.getDisplayValue('u_storage_address');
+				sLocation.locationName = ttsl.getDisplayValue('u_uniqueid');
+				sLocation.zip = ttsl.getDisplayValue('u_storage_zipcode');
+				sLocation.city = ttsl.getDisplayValue('u_storage_city');
+				sLocation.state = ttsl.getDisplayValue('u_storage_state');
+				sLocation.sysID = ttsl.getValue('sys_id');
+				locations.push(sLocation);
+			}
+			data.locations = locations;
+		}
+
+		// magic is about to happen
+		else if(input.operation == "setLocationForRITM"){
+			var util = new global.FMTUtil();
+			util.setLocationForRequestedItem(input.selectedRITM.sysID, input.selectedLocation.sysID);
+			input = null;
+		}
+
+		else if(input.operation == "skipRITM"){
+			var util = new global.FMTUtil();
+			util.setCommentForRequestedItem(input.selectedRITM.sysID, "No matching Location for Inventory.");
+			input = null;
+		}
+
+
+	}
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>cmesser</sys_created_by>
+        <sys_created_on>2018-08-10 16:53:16</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
+        <sys_id>d088f196db3b1b00bf4d7aa9bf96197e</sys_id>
+        <sys_mod_count>97</sys_mod_count>
+        <sys_name>MatchInventoryLocation17</sys_name>
+        <sys_package display_value="Match Locations for Inventory17" source="x_osmo2_match_loca">b447bdd2db3b1b00bf4d7aa9bf96193e</sys_package>
+        <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="Match Locations for Inventory17">b447bdd2db3b1b00bf4d7aa9bf96193e</sys_scope>
+        <sys_update_name>sp_widget_d088f196db3b1b00bf4d7aa9bf96197e</sys_update_name>
+        <sys_updated_by>cmesser</sys_updated_by>
+        <sys_updated_on>2018-08-15 14:51:28</sys_updated_on>
+        <template><![CDATA[<div >
+  <H3>    Requested Items for Inventory at a Storage Location <small>- not recently edited </small> </H3>
+  <table id="ritmTable" class="table table-bordered">
+    <thead>
+      <tr>
+        <th class="col-xs-3 blackText">RITM</th>
+        <th class="col-xs-6 blackText">Address</th>
+        <th class="col-xs-3 blackText">Zip</th>
+        <th class="col-xs-3 blackText">City</th>
+        <th class="col-xs-3 blackText">State</th>
+        <th class="col-xs-3 blackText">Loc Name (for reference)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="item in data.items" >
+        <td ng-click="loadInventory(item);" class="blackText">{{::item.name}}</td>
+        <td class="blackText">{{::item.address}}</td>
+        <td class="blackText">{{::item.zip}}</td>
+        <td class="blackText">{{::item.city}}</td>
+        <td class="blackText">{{::item.state}}</td>
+        <td class="blackText">{{::item.loc}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div>
+  <H3>    Matching Inventory records <small>- for selected Requested Item</small> </H3>
+  <table id="inventoryTable" class="table table-bordered">
+    <thead>
+      <tr>
+        <th class="col-xs-3 blackText">Address</th>
+        <th class="col-xs-6 blackText">Location Name</th>
+        <th class="col-xs-3 blackText">Zip</th>
+        <th class="col-xs-3 blackText">City</th>
+        <th class="col-xs-3 blackText">State</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="inventory in data.inventories" >
+        <td class="blackText">{{::inventory.address}}</td>
+        <td class="blackText">{{::inventory.locationName}}</td>
+        <td class="blackText">{{::inventory.zip}}</td>
+        <td class="blackText">{{::inventory.city}}</td>
+        <td class="blackText">{{::inventory.state}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>
+  <H4>Lookup Location By:</H4>
+  <button type="button" class="btn btn-success" ng-click="searchByName();">Name</button>
+  <button type="button" class="btn btn-success" ng-click="searchByAddress();">Address</button>
+  <button type="button" class="btn btn-success" ng-click="searchByZip();">Zip Code</button>
+  <button type="button" class="btn btn-success" ng-click="searchByCity();">City</button>
+</p>
+<div>
+  <H3>    Matching Location records <small>- based on Requested Item and search button</small> </H3>
+  <table id="locationTable" class="table table-bordered">
+    <thead>
+      <tr>
+        <th class="col-xs-3 blackText">Address</th>
+        <th class="col-xs-6 blackText">Location Name</th>
+        <th class="col-xs-3 blackText">Zip</th>
+        <th class="col-xs-3 blackText">City</th>
+        <th class="col-xs-3 blackText">State</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="location in data.locations" >
+        <td ng-click="selectLocation(location);" class="blackText">{{::location.address}}</td>
+        <td class="blackText">{{::location.locationName}}</td>
+        <td class="blackText">{{::location.zip}}</td>
+        <td class="blackText">{{::location.city}}</td>
+        <td class="blackText">{{::location.state}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<div class="vMargin">
+  If you are sure ->
+  <button type="button" ng-click="linkLocation();" class="btn btn-primary">
+    Set Location for Requested Item
+  </button>
+  If there is NO match ->
+  <button type="button" ng-click="skipRITM();" class="btn btn-danger">
+    Skip it
+  </button>
+</div>
+]]></template>
+    </sp_widget>
+</record_update>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_filter">
+    <sys_filter action="INSERT_OR_UPDATE">
+        <filter table="sc_req_item">cat_item=0672c007db240f00bf4d7aa9bf96192e^descriptionSTARTSWITHno matching^EQ<item display_table="sc_cat_item" display_value="Year End Inventory" endquery="false" field="cat_item" goto="false" newquery="false" operator="=" or="false" value="0672c007db240f00bf4d7aa9bf96192e"/>
+            <item endquery="false" field="description" goto="false" newquery="false" operator="STARTSWITH" or="false" value="no matching"/>
+            <item endquery="true" field="" goto="false" newquery="false" operator="=" or="false" value=""/>
+        </filter>
+        <group/>
+        <last_used/>
+        <mobile>false</mobile>
+        <roles/>
+        <sys_class_name>sys_filter</sys_class_name>
+        <sys_created_by>cmesser</sys_created_by>
+        <sys_created_on>2018-08-15 14:16:05</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>2674cb3fdbb71f00bf4d7aa9bf96191c</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Inventory with no matching Location</sys_name>
+        <sys_package display_value="Match Locations for Inventory17" source="x_osmo2_match_loca">b447bdd2db3b1b00bf4d7aa9bf96193e</sys_package>
+        <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="Match Locations for Inventory17">b447bdd2db3b1b00bf4d7aa9bf96193e</sys_scope>
+        <sys_update_name>sys_filter_2674cb3fdbb71f00bf4d7aa9bf96191c</sys_update_name>
+        <sys_updated_by>cmesser</sys_updated_by>
+        <sys_updated_on>2018-08-15 14:16:05</sys_updated_on>
+        <table>sc_req_item</table>
+        <title>Inventory with no matching Location</title>
+        <user/>
+    </sys_filter>
+</record_update>
